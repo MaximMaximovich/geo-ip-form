@@ -367,7 +367,7 @@ class GeoIpInfo extends \CBitrixComponent implements Controllerable
     private function getInfoFromSypexgeo(string $ip): array
     {
         $arInfo = [];
-        $queryUrl = sprintf('https://ru.sxgeo.city/json/%s/', $ip);
+        $queryUrl = sprintf('http://us3.sxgeo.city/json/%s/', $ip);
 
         try {
             $options = [
@@ -382,6 +382,7 @@ class GeoIpInfo extends \CBitrixComponent implements Controllerable
 
             // get-запрос
             $response = $httpClient->get($queryUrl);
+
         } catch (Exception $exception) {
 
             $arCFields = [
@@ -394,6 +395,18 @@ class GeoIpInfo extends \CBitrixComponent implements Controllerable
         }
 
         $result = json_decode($response, true);
+
+        if (!empty($result['error'])) {
+
+            $arCFields = [
+                'ERROR_TYPE' => 'GEOIP_COMPONENT::getInfoFromSypexgeo',
+                'ERROR_INFO' => $result['error']
+            ];
+
+            $this->eventSend($arCFields);
+
+            return [];
+        }
 
         if ($result['ip']) {
             $arInfo = [
@@ -454,6 +467,8 @@ class GeoIpInfo extends \CBitrixComponent implements Controllerable
             ];
 
             $this->eventSend($arCFields);
+
+            return [];
         }
 
         if ($result['ip']) {
